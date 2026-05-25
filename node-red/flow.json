@@ -1,0 +1,145 @@
+[
+  {
+    "id": "aedes1",
+    "type": "aedes broker",
+    "name": "Broker MQTT Local",
+    "mqtt_port": 1883,
+    "mqtt_ws_port": 8080,
+    "z": ""
+  },
+  {
+    "id": "mqtt_local",
+    "type": "mqtt-broker",
+    "name": "Broker Local",
+    "broker": "localhost",
+    "port": 1883,
+    "clientid": "nodered_mackenzie",
+    "z": ""
+  },
+  {
+    "id": "tab1",
+    "type": "ui_tab",
+    "name": "Dashboard IoT",
+    "icon": "dashboard",
+    "z": ""
+  },
+  {
+    "id": "group1",
+    "type": "ui_group",
+    "name": "Monitoramento do Ar",
+    "tab": "tab1",
+    "order": 1,
+    "disp": true,
+    "width": 12,
+    "z": ""
+  },
+  {
+    "id": "sub_qualidade",
+    "type": "mqtt in",
+    "name": "Qualidade do Ar",
+    "topic": "mackenzie/ar/qualidade",
+    "broker": "mqtt_local",
+    "x": 200, "y": 100, "z": "flow1",
+    "wires": [["gauge_qualidade", "debug1"]]
+  },
+  {
+    "id": "sub_temp",
+    "type": "mqtt in",
+    "name": "Temperatura",
+    "topic": "mackenzie/ar/temperatura",
+    "broker": "mqtt_local",
+    "x": 200, "y": 180, "z": "flow1",
+    "wires": [["gauge_temp"]]
+  },
+  {
+    "id": "sub_umid",
+    "type": "mqtt in",
+    "name": "Umidade",
+    "topic": "mackenzie/ar/umidade",
+    "broker": "mqtt_local",
+    "x": 200, "y": 260, "z": "flow1",
+    "wires": [["gauge_umid"]]
+  },
+  {
+    "id": "sub_vent",
+    "type": "mqtt in",
+    "name": "Ventilador",
+    "topic": "mackenzie/ar/ventilador",
+    "broker": "mqtt_local",
+    "x": 200, "y": 340, "z": "flow1",
+    "wires": [["text_vent"]]
+  },
+  {
+    "id": "gauge_qualidade",
+    "type": "ui_gauge",
+    "name": "Qualidade do Ar",
+    "group": "group1",
+    "order": 1,
+    "width": 6, "height": 4,
+    "gtype": "gage",
+    "title": "Qualidade do Ar (ADC)",
+    "label": "ADC",
+    "format": "{{value}}",
+    "min": 0, "max": 4095,
+    "colors": ["#00b500", "#e6e600", "#ca3838"],
+    "seg1": 1000, "seg2": 2500,
+    "x": 480, "y": 100, "z": "flow1",
+    "wires": []
+  },
+  {
+    "id": "gauge_temp",
+    "type": "ui_gauge",
+    "name": "Temperatura",
+    "group": "group1",
+    "order": 2,
+    "width": 3, "height": 3,
+    "gtype": "gage",
+    "title": "Temperatura",
+    "label": "°C",
+    "format": "{{value}}",
+    "min": -40, "max": 80,
+    "colors": ["#0000ff", "#00b500", "#ff0000"],
+    "seg1": 0, "seg2": 35,
+    "x": 480, "y": 180, "z": "flow1",
+    "wires": []
+  },
+  {
+    "id": "gauge_umid",
+    "type": "ui_gauge",
+    "name": "Umidade",
+    "group": "group1",
+    "order": 3,
+    "width": 3, "height": 3,
+    "gtype": "gage",
+    "title": "Umidade",
+    "label": "%",
+    "format": "{{value}}",
+    "min": 0, "max": 100,
+    "colors": ["#00b500", "#e6e600", "#ca3838"],
+    "seg1": 30, "seg2": 70,
+    "x": 480, "y": 260, "z": "flow1",
+    "wires": []
+  },
+  {
+    "id": "text_vent",
+    "type": "ui_text",
+    "name": "Ventilador",
+    "group": "group1",
+    "order": 4,
+    "width": 6, "height": 1,
+    "label": "Ventilador",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 480, "y": 340, "z": "flow1",
+    "wires": []
+  },
+  {
+    "id": "debug1",
+    "type": "debug",
+    "name": "Debug",
+    "active": true,
+    "tosidebar": true,
+    "x": 480, "y": 420, "z": "flow1",
+    "wires": []
+  }
+]
