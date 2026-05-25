@@ -1,7 +1,7 @@
 # Sistema Inteligente de Monitoramento da Qualidade do Ar Urbano com IoT e ESP32
 
 **Universidade Presbiteriana Mackenzie – Faculdade de Computação e Informática**  
-**Autor:** Victor Semedo  
+**Autores:** Victor Semedo, Willian Costa  
 **Disciplina:** Internet das Coisas (IoT)  
 **ODS 11** – Cidades e Comunidades Sustentáveis
 
@@ -9,9 +9,10 @@
 
 ## Descrição do Projeto
 
-Sistema IoT de baixo custo para monitoramento contínuo da qualidade do ar em ambientes urbanos. O projeto utiliza um script Python para simular o firmware do ESP32, coletando dados dos sensores MQ-135 (gases nocivos) e DHT22 (temperatura/umidade), acionando automaticamente um ventilador exaustor quando os níveis de poluentes ultrapassam o limiar configurado (ADC > 2500), e publicando todos os dados via protocolo MQTT em um broker local gerenciado pelo Node-RED, onde são visualizados em um dashboard em tempo real.
+Sistema IoT de baixo custo para monitoramento contínuo da qualidade do ar em ambientes urbanos. O projeto utiliza um script Python para simular o firmware do ESP32, coletando dados dos sensores MQ-135 (gases nocivos) e DHT22 (temperatura/umidade), acionando automaticamente um ventilador exaustor quando os níveis de poluentes ultrapassam o limiar configurado (ADC > 2500), e publicando todos os dados via protocolo MQTT no broker público **broker.emqx.io** (internet real), onde são visualizados em um dashboard Node-RED em tempo real.
 
-O circuito do ESP32 foi modelado e simulado na plataforma Wokwi (wokwi.com/projects/465002858456776705).
+O circuito do ESP32 foi modelado e simulado na plataforma Wokwi:  
+🔗 https://wokwi.com/projects/465002858456776705
 
 ---
 
@@ -20,9 +21,9 @@ O circuito do ESP32 foi modelado e simulado na plataforma Wokwi (wokwi.com/proje
 ```
 [Script Python / ESP32]
         |
-        | MQTT (TCP/IP – localhost:1883)
+        | MQTT (TCP/IP – broker.emqx.io:1883 – internet real)
         v
-[Broker MQTT – Node-RED local]
+[Broker MQTT – broker.emqx.io]
         |
         |-- [Dashboard Node-RED] → http://localhost:1880/ui
         |-- [MQTT Explorer]      → visualização dos tópicos
@@ -43,25 +44,26 @@ O circuito do ESP32 foi modelado e simulado na plataforma Wokwi (wokwi.com/proje
 ```bash
 node-red
 ```
-Acesse: `http://localhost:1880` e importe o fluxo `node-red/flow.json`.
+Acesse `http://localhost:1880` e importe o fluxo `node-red/flow.json`.  
+Configure o broker MQTT para `broker.emqx.io` porta `1883`.
 
 ### Passo 2 — Rodar o script de simulação
 ```bash
-python firmware/esp32_local.py
+python firmware/esp32_medicao_v2.py
 ```
-O script publica dados nos tópicos MQTT a cada 5 segundos.
+O script conecta ao `broker.emqx.io` via internet e publica dados nos tópicos MQTT a cada 5 segundos. O gás é gerado aleatoriamente — 30% do tempo com poluição elevada (ADC > 2500), acionando o ventilador automaticamente.
 
 ### Passo 3 — Visualizar o dashboard
 Acesse: `http://localhost:1880/ui`
 
 ### Passo 4 — Monitorar os tópicos MQTT
-Abra o MQTT Explorer, conecte em `localhost:1883` e filtre por `mackenzie/#`.
+Abra o MQTT Explorer, conecte em `broker.emqx.io` porta `1883` e filtre por `mackenzie/#`.
 
 ---
 
 ## Circuito Virtual (Wokwi)
 
-Acesse a simulação: **https://wokwi.com/projects/465002858456776705**
+🔗 **https://wokwi.com/projects/465002858456776705**
 
 | Componente | Especificação | GPIO |
 |---|---|---|
@@ -98,23 +100,30 @@ SENÃO SE ciclos_abaixo >= 2 ENTÃO
     publicar mackenzie/ar/ventilador = "OFF"
 ```
 
+### Geração aleatória do gás (simulação realista)
+```python
+def gerar_gas():
+    if random.random() < 0.30:
+        return random.randint(2600, 3800)  # 30%: poluição elevada
+    else:
+        return random.randint(800, 2200)   # 70%: ar normal
+```
+
 ---
 
 ## Estrutura do Repositório
 
 ```
 ├── firmware/
-│   ├── main.ino              # Código ESP32 (Arduino IDE)
-│   ├── esp32_local.py        # Script Python – simulação com broker local
-│   └── esp32_medicao.py      # Script Python – medição de latência MQTT
+│   ├── main.ino                # Firmware ESP32 (Arduino IDE / Wokwi)
+│   ├── esp32_local.py          # Script Python – broker local (desenvolvimento)
+│   └── esp32_medicao_v2.py     # Script Python – broker.emqx.io (produção)
 ├── node-red/
-│   └── flow.json             # Fluxo Node-RED (broker + dashboard)
+│   └── flow.json               # Fluxo Node-RED (broker + dashboard)
 ├── wokwi/
-│   └── diagram.json          # Diagrama do circuito para Wokwi
+│   └── diagram.json            # Diagrama do circuito para Wokwi
 ├── docs/
-│   ├── diagrama_circuito.png # Diagrama esquemático de montagem
-│   ├── fluxograma.png        # Fluxograma do firmware
-│   └── artigo.pdf            # Artigo científico completo
+│   └── descricao_hardware.md   # Descrição detalhada do hardware
 └── README.md
 ```
 
@@ -122,14 +131,15 @@ SENÃO SE ciclos_abaixo >= 2 ENTÃO
 
 ## Nota sobre o Wokwi
 
-Durante o desenvolvimento, tentou-se utilizar o simulador Wokwi para executar o firmware ESP32 com comunicação MQTT direta. Identificou-se que o plano gratuito da plataforma bloqueia conexões TCP externas (porta 1883), impossibilitando a comunicação com brokers MQTT remotos. Como solução, o firmware foi adaptado e executado via script Python, simulando o comportamento do ESP32 com publicação dos dados via protocolo MQTT em um broker local gerenciado pelo Node-RED. O circuito permanece disponível no Wokwi para visualização da montagem.
+Durante o desenvolvimento, tentou-se utilizar o simulador Wokwi para executar o firmware ESP32 com comunicação MQTT direta. Identificou-se que o plano gratuito da plataforma bloqueia conexões TCP externas (porta 1883), impossibilitando a comunicação com brokers MQTT remotos. Como solução, o firmware foi adaptado e executado via script Python, simulando o comportamento do ESP32 com publicação dos dados via protocolo MQTT no broker público `broker.emqx.io` — comunicação real via internet TCP/IP. O circuito permanece disponível no Wokwi para visualização da montagem.
 
 ---
 
 ## Resultados
 
-- Latência média de publicação MQTT: **0,2 ms** (broker local)
-- Ventilador acionado automaticamente quando Gas ADC > 2500
+- Broker utilizado: **broker.emqx.io** (internet real, TCP/IP)
+- Latência média de publicação MQTT: **0,2–0,3 ms**
+- Ventilador acionado automaticamente quando Gas ADC > 2500 (~30% dos ciclos)
 - Dashboard atualizado em tempo real a cada 5 segundos
 - Controle remoto do ventilador via tópico `mackenzie/ar/cmd`
 
