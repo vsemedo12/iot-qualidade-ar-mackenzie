@@ -21,8 +21,9 @@
     {
       "type": "wokwi-resistor",
       "id": "r_pull",
-      "top": 263.15,
-      "left": 576,
+      "top": 234.65,
+      "left": 593.8,
+      "rotate": 180,
       "attrs": { "value": "10000", "label": "10kΩ" }
     },
     {
@@ -30,7 +31,7 @@
       "id": "r_base",
       "top": 186.35,
       "left": 451.2,
-      "attrs": { "value": "1000", "label": "1kΩ" }
+      "attrs": { "value": "330", "label": "1kΩ" }
     },
     {
       "type": "wokwi-led",
@@ -41,10 +42,7 @@
     }
   ],
   "connections": [
-    [ "esp:GND.1", "dht1:GND", "black", [] ],
-    [ "esp:3V3", "dht1:VCC", "red", [] ],
     [ "esp:IO4", "r_pull:1", "green", [] ],
-    [ "r_pull:2", "dht1:SDA", "green", [] ],
     [ "esp:GND.2", "mq1:GND", "black", [] ],
     [ "esp:3V3", "mq1:VCC", "red", [ "h18.9", "v67.2", "h-354.4" ] ],
     [ "mq1:SIG", "esp:IO34", "orange", [] ],
@@ -53,8 +51,14 @@
     [ "fan1:C", "esp:GND.3", "black", [] ],
     [ "fan1:C", "esp:GND.1", "green", [ "h0.4", "v220.8", "v38.5" ] ],
     [ "r_base:1", "esp:D26", "green", [ "v-96", "h-211.2", "v153.7" ] ],
-    [ "r_pull:1", "esp:D4", "green", [ "v0" ] ],
-    [ "mq1:SIG", "esp:D34", "green", [ "v0" ] ]
+    [ "mq1:SIG", "esp:D34", "green", [ "v0" ] ],
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "esp:VIN", "r_pull:2", "red", [ "v76.8", "h306" ] ],
+    [ "dht1:VCC", "esp:VIN", "red", [ "v249.6", "h-412.8" ] ],
+    [ "r_pull:1", "dht1:SDA", "green", [ "h57.6", "v-105.6" ] ],
+    [ "esp:RX2", "dht1:SDA", "green", [ "h38.1", "v-38.7", "h287.9" ] ],
+    [ "dht1:GND", "esp:GND.1", "black", [ "v0" ] ]
   ],
   "dependencies": {}
 }
