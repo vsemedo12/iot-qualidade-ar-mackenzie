@@ -1,8 +1,8 @@
 """
 Simulador ESP32 – Sistema de Monitoramento da Qualidade do Ar Urbano
 Universidade Presbiteriana Mackenzie – FCI
-Autor: Victor Semedo
-Versão com medição de latência MQTT real via broker externo
+Autor: Victor Semedo, Willian Costa
+Protocolo: MQTT via broker.emqx.io (TCP/IP – internet real)
 """
 
 import paho.mqtt.client as mqtt
@@ -10,9 +10,9 @@ import random
 import time
 
 # ── Configurações MQTT ────────────────────────────────────────────────────────
-BROKER    = "localhost"
+BROKER    = "broker.emqx.io"
 PORT      = 1883
-CLIENT_ID = "esp32_mackenzie_10341694_med"
+CLIENT_ID = "esp32_mac_vs_wc_2026_xyz987"
 
 TOPIC_QUALIDADE   = "mackenzie/ar/qualidade"
 TOPIC_TEMPERATURA = "mackenzie/ar/temperatura"
@@ -26,8 +26,8 @@ abaixo_count  = 0
 LIMIAR_GAS    = 2500
 
 # Controle de latência
-publish_times = {}   # mid -> t0
-latencias     = []   # lista de latências medidas
+publish_times = {}
+latencias     = []
 
 # ── Callbacks ────────────────────────────────────────────────────────────────
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -81,6 +81,18 @@ def publicar(client, topic, valor):
     publish_times[info.mid] = t0
     return info
 
+def gerar_gas():
+    """
+    Gera leitura de gás de forma aleatória e realista:
+    - 70% do tempo: ar normal (800–2200 ADC)
+    - 30% do tempo: poluição elevada (2600–3800 ADC)
+    Simula variações reais de qualidade do ar urbano.
+    """
+    if random.random() < 0.30:
+        return random.randint(2600, 3800)  # poluição elevada
+    else:
+        return random.randint(800, 2200)   # ar normal
+
 def main():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID)
     client.on_connect = on_connect
@@ -100,12 +112,8 @@ def main():
     while True:
         ciclo += 1
 
-        # Simula leituras — ciclos 4 e 5 com gás alto
-        if ciclo in [4, 5]:
-            adc_gas = random.randint(2600, 3500)
-        else:
-            adc_gas = random.randint(800, 2200)
-
+        # Geração aleatória e realista dos sensores
+        adc_gas     = gerar_gas()
         temperatura = round(random.uniform(24.0, 32.0), 1)
         umidade     = round(random.uniform(55.0, 80.0), 1)
 
@@ -115,12 +123,11 @@ def main():
         publicar(client, TOPIC_TEMPERATURA, temperatura)
         publicar(client, TOPIC_UMIDADE,     umidade)
 
-        time.sleep(0.5)  # aguarda callbacks de on_publish
+        time.sleep(0.5)
 
         lat = latencias[-1] if latencias else 0
         print(f"{ciclo:<6} {adc_gas:<10} {temperatura:<10} {umidade:<10} {lat:<15} {'ON' if fan_on else 'OFF'}")
 
-        # A cada 4 ciclos mostra resumo das latências
         if ciclo % 4 == 0 and latencias:
             media = round(sum(latencias[-12:]) / len(latencias[-12:]), 1)
             print(f"\n  >> Latencia media MQTT (ultimas medicoes): {media} ms\n")
