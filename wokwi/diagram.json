@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "author": "Victor Semedo",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 200, "left": 250, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": 30, "left": 530, "attrs": { "temperature": "28", "humidity": "65" } },
+    { "type": "wokwi-potentiometer", "id": "mq1", "top": 30, "left": -20, "attrs": { "label": "MQ-135" } },
+    { "type": "wokwi-resistor", "id": "r_pull", "top": 130, "left": 530, "attrs": { "value": "10000", "label": "10kΩ" } },
+    { "type": "wokwi-resistor", "id": "r_base", "top": 420, "left": 250, "attrs": { "value": "1000", "label": "1kΩ" } },
+    { "type": "wokwi-npn-transistor", "id": "bc1", "top": 420, "left": 390, "attrs": { "type": "BC547" } },
+    { "type": "wokwi-led", "id": "fan1", "top": 350, "left": 530, "attrs": { "color": "blue", "label": "Ventilador" } }
+  ],
+  "connections": [
+    [ "esp:GND.1",   "dht1:GND",   "black",  [] ],
+    [ "esp:3V3",     "dht1:VCC",   "red",    [] ],
+    [ "esp:IO4",     "r_pull:1",   "green",  [] ],
+    [ "r_pull:2",    "dht1:SDA",   "green",  [] ],
+    [ "esp:GND.2",   "mq1:GND",   "black",  [] ],
+    [ "esp:3V3",     "mq1:VCC",   "red",    [] ],
+    [ "mq1:SIG",     "esp:IO34",  "orange", [] ],
+    [ "esp:IO26",    "r_base:1",  "yellow", [] ],
+    [ "r_base:2",    "bc1:B",     "yellow", [] ],
+    [ "bc1:E",       "esp:GND.3", "black",  [] ],
+    [ "bc1:C",       "fan1:A",    "blue",   [] ],
+    [ "fan1:C",      "esp:3V3",   "red",    [] ]
+  ],
+  "dependencies": {}
+}
